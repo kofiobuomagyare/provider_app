@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -5,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider_app/screens/login_screen.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -125,57 +128,65 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   }
 
   // Function to register the service provider
-  Future<void> registerServiceProvider() async {
-    final String url = getBaseUrl() + '/api/providers/register'; // Updated to match backend URL
-    final Map<String, String> headers = {'Content-Type': 'application/json'};
+Future<void> registerServiceProvider() async {
+  final String url = '${getBaseUrl()}/api/providers/register';
+  final Map<String, String> headers = {'Content-Type': 'application/json'};
 
-    // Prepare the body of the POST request with form data
-    final body = json.encode({
-      'businessName': businessNameController.text,
-      'email': emailController.text,
-      'phoneNumber': phoneNumberController.text,
-      'password': passwordController.text,
-      'serviceType': selectedServiceType,
-      'latitude': _latitude,
-      'longitude': _longitude,
-      'description': descriptionController.text,
-      'pricePerHour': pricePerHourController.text,
-    });
-
-    try {
-      // Send the POST request to the backend
-      final response = await http.post(Uri.parse(url), headers: headers, body: body);
-
-      // Handle the backend response
-      if (response.statusCode == 200) {
-        // Registration successful, handle success (e.g., show a message or navigate)
-        print('Service Provider registered successfully');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Service Provider registered successfully')),
-        );
-      } else if (response.statusCode == 400) {
-        // Handle the case where the email is already in use
-        final errorMessage = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
-      } else {
-        // Handle any other error (e.g., server error)
-        print('Failed to register: ${response.body}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration failed, try again later')),
-        );
-      }
-    } catch (error) {
-      // Handle network or other errors
-      print('Error: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred, please try again')),
-      );
-    }
+  // Read and encode the profile image (if selected)
+  String? base64ProfileImage;
+  if (_profileImage != null) {
+    final bytes = await _profileImage!.readAsBytes();
+    base64ProfileImage = base64Encode(bytes);
   }
 
-  @override
+  // Prepare the body with form data and base64 image
+  final body = json.encode({
+    'businessName': businessNameController.text,
+    'email': emailController.text,
+    'phoneNumber': phoneNumberController.text,
+    'password': passwordController.text,
+    'serviceType': selectedServiceType,
+    'location': {
+      'latitude': _latitude,
+      'longitude': _longitude,
+    },
+    'description': descriptionController.text,
+    'pricePerHour': double.tryParse(pricePerHourController.text) ?? 0.0,
+    'profilePicture': base64ProfileImage, // ✅ Add encoded image here
+  });
+
+  try {
+    final response = await http.post(Uri.parse(url), headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      print('Service Provider registered successfully');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Service Provider registered successfully')),
+      );
+      // Navigate to login screen after registration
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()), // Replace with your LoginScreen widget
+      );
+    } else if (response.statusCode == 400) {
+      final errorMessage = json.decode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage.toString())),
+      );
+    } else {
+      print('Failed to register: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration failed, try again later')),
+      );
+    }
+  } catch (error) {
+    print('Error: $error');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('An error occurred, please try again')),
+    );
+  }
+}
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
