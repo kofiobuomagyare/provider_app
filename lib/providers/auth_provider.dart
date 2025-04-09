@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider extends ChangeNotifier {
   bool _isLoggedIn = false;
@@ -22,6 +23,21 @@ class AuthProvider extends ChangeNotifier {
     return 'https://salty-citadel-42862-262ec2972a46.herokuapp.com'; // Default for other cases
   }
 
+  // Load the login state from SharedPreferences
+  Future<void> loadLoginState() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    notifyListeners();
+  }
+
+  // Save login state to SharedPreferences
+  Future<void> saveLoginState(bool isLoggedIn) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('isLoggedIn', isLoggedIn);
+    _isLoggedIn = isLoggedIn;
+    notifyListeners();
+  }
+
   // Login method using phone number and password
   Future<bool> login(String phoneNumber, String password) async {
     final url = Uri.parse('${getBaseUrl()}/api/providers/login');
@@ -36,8 +52,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        _isLoggedIn = true;
-        notifyListeners();
+        await saveLoginState(true);  // Save login state after successful login
         return true;
       } else {
         _errorMessage = 'Invalid phone number or password';
@@ -52,8 +67,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Logout method
-  void logout() {
-    _isLoggedIn = false;
-    notifyListeners();
+  Future<void> logout() async {
+    await saveLoginState(false);  // Save logout state
   }
 }
