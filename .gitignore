@@ -48,4 +48,4 @@ android/gradle.properties
 # Local properties file
 android/local.properties
 #Firebase auth
-android/app/google-services.json
+/android/app/google-services.json
