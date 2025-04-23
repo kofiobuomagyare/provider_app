@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import the shared_preferences package
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,28 +18,36 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isPasswordVisible = false;  // Variable to track password visibility
 
-  Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-    });
+Future<void> _login() async {
+  setState(() {
+    _isLoading = true;
+  });
 
-    final bool success = await Provider.of<AuthProvider>(context, listen: false)
-        .login(_phoneController.text, _passwordController.text);
+  final bool success = await Provider.of<AuthProvider>(context, listen: false)
+      .login(_phoneController.text, _passwordController.text);
 
-    setState(() {
-      _isLoading = false;
-    });
+  setState(() {
+    _isLoading = false;
+  });
 
-    if (success) {
-      // Navigate to home screen if login is successful
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      // Show error message if login fails
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<AuthProvider>(context, listen: false).errorMessage)),
-      );
-    }
+  if (success) {
+    // Store the phone number in SharedPreferences after successful login
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('phoneNumber', _phoneController.text);
+    
+    // Log to ensure the phone number is saved
+    String? storedPhoneNumber = prefs.getString('phoneNumber');
+    print('Stored phone number: $storedPhoneNumber');
+
+    // Navigate to home screen if login is successful
+    Navigator.pushReplacementNamed(context, '/home');
+  } else {
+    // Show error message if login fails
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(Provider.of<AuthProvider>(context, listen: false).errorMessage)),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {

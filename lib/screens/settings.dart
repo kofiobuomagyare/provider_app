@@ -1,10 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';  // Import shared_preferences
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider_app/bottomnavbar.dart'; // ✅ Import the bottom navbar
 
 class ServiceProvider {
@@ -31,25 +31,27 @@ class ServiceProvider {
   Map<String, dynamic> toJson() {
     return {
       'email': email,
-      'phoneNumber': phoneNumber,
+      'phone_number': phoneNumber,
       'location': location,
-      'serviceType': serviceType,
-      'profilePicture': profilePicture,
-      'businessName': businessName,
+      'service_type': serviceType,
+      'profile_picture': profilePicture,
+      'business_name': businessName,
       'availability': availability,
     };
   }
 
   static ServiceProvider fromJson(Map<String, dynamic> json) {
     return ServiceProvider(
-      serviceProviderId: json['service_provider_id'],
-      email: json['email'],
-      phoneNumber: json['phone_number'],
-      location: json['location'],
-      serviceType: json['service_type'],
-      profilePicture: json['profile_picture'],
-      businessName: json['business_name'],
-      availability: Map<String, bool>.from(json['availability']),
+      serviceProviderId: json['service_provider_id'] ?? '',
+      email: json['email'] ?? '',
+      phoneNumber: json['phone_number'] ?? '',
+      location: json['location'] ?? '',
+      serviceType: json['service+type'] ?? '',
+      profilePicture: json['profile_picture'] ?? '',
+      businessName: json['business_name'] ?? '',
+      availability: json['availability'] != null && json['availability'] is Map
+          ? Map<String, bool>.from(json['availability'])
+          : {},
     );
   }
 }
@@ -65,12 +67,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _businessNameController = TextEditingController();
-  File? _image;
   bool _isLoading = false;
 
-  int _selectedIndex = 2; // ✅ Default to 'Settings' tab
+  int _selectedIndex = 2; // Default to 'Settings' tab
 
-  // Simulated current provider
   ServiceProvider currentProvider = ServiceProvider(
     serviceProviderId: '',
     email: 'provider@example.com',
@@ -82,12 +82,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     availability: {'Monday': true, 'Tuesday': true, 'Wednesday': true, 'Thursday': true, 'Friday': true},
   );
 
+  // Fetch service provider details from the API
   Future<void> _fetchServiceProviderDetails() async {
-    final url = Uri.parse('https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/providers/${currentProvider.serviceProviderId}');
+    final prefs = await SharedPreferences.getInstance();
+    String phoneNumber = prefs.getString('phoneNumber') ?? ''; // Default to empty string if null
+
+    if (phoneNumber.isEmpty) {
+      print('Phone number is missing.');
+    } else {
+      print('Phone number retrieved: $phoneNumber');
+    }
+
+    final url = Uri.parse('https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/providers/serviceprovider?phoneNumber=$phoneNumber');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       final providerData = json.decode(response.body);
+      print('Provider data: $providerData'); // Log the raw JSON response
       setState(() {
         currentProvider = ServiceProvider.fromJson(providerData);
       });
@@ -96,22 +107,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // Pick an image for the profile
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _image = File(pickedFile.path);
       });
     }
   }
 
+  // Update the service provider details
   Future<void> _updateServiceProvider() async {
     setState(() {
       _isLoading = true;
     });
 
-    final url = Uri.parse('https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/providers/${currentProvider.serviceProviderId}');
+    final prefs = await SharedPreferences.getInstance();
+    String phoneNumber = prefs.getString('phoneNumber') ?? '';
+
+    final url = Uri.parse('https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/providers/serviceprovider?phoneNumber=$phoneNumber');
     final response = await http.put(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -129,38 +144,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
-  Future<void> _updateAvailability() async {
-    final url = Uri.parse('https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/providers/${currentProvider.serviceProviderId}/availability');
-    final response = await http.put(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'availability': currentProvider.availability}),
-    );
-
-    if (response.statusCode == 200) {
-      print('Availability updated');
-    } else {
-      print('Failed to update availability');
-    }
-  }
-
+  // Logout the service provider
   Future<void> _logout() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Remove session data from shared_preferences (if any)
+    // Remove session data from shared_preferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove('serviceProviderId');
-    prefs.remove('authToken');  // If you're storing an auth token
+    prefs.remove('authToken');
 
-    // Call the logout endpoint
     final url = Uri.parse('https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/providers/logout');
-    final response = await http.post(url);  // Assuming you send a POST request to log out
+    final response = await http.post(url);
 
     if (response.statusCode == 200) {
       print('Logged out');
-      // Redirect to login page after successful logout
       Navigator.pushReplacementNamed(context, '/login');
     } else {
       print('Failed to log out');
@@ -171,6 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  // Handle bottom navbar item tap
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -191,11 +191,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _emailController.text = currentProvider.email;
     _phoneController.text = currentProvider.phoneNumber;
     _businessNameController.text = currentProvider.businessName;
-    _fetchServiceProviderDetails(); // Fetch provider details on screen load
+    _fetchServiceProviderDetails();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Decode the base64 profile picture if available
+    Uint8List? profileImageBytes = currentProvider.profilePicture.isNotEmpty
+        ? base64.decode(currentProvider.profilePicture)
+        : null;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
@@ -208,76 +213,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: _pickImage,
                   child: CircleAvatar(
                     radius: 50,
-                    backgroundImage: _image != null
-                        ? FileImage(_image!)
+                    backgroundImage: profileImageBytes != null
+                        ? MemoryImage(profileImageBytes)
                         : (currentProvider.profilePicture.isNotEmpty
                             ? NetworkImage(currentProvider.profilePicture)
                             : const AssetImage('assets/default_profile.png')) as ImageProvider,
-                    child: _image == null
-                        ? const Icon(Icons.camera_alt, size: 50, color: Colors.white)
-                        : null,
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _businessNameController,
-                  decoration: const InputDecoration(labelText: 'Business Name'),
-                  onChanged: (value) => setState(() {
-                    currentProvider.businessName = value;
-                  }),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
-                  onChanged: (value) => setState(() {
-                    currentProvider.email = value;
-                  }),
                 ),
-                const SizedBox(height: 16),
                 TextField(
                   controller: _phoneController,
                   decoration: const InputDecoration(labelText: 'Phone Number'),
-                  onChanged: (value) => setState(() {
-                    currentProvider.phoneNumber = value;
-                  }),
+                ),
+                TextField(
+                  controller: _businessNameController,
+                  decoration: const InputDecoration(labelText: 'Business Name'),
                 ),
                 const SizedBox(height: 16),
-                Column(
-                  children: currentProvider.availability.keys.map((day) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Available on $day'),
-                        Switch(
-                          value: currentProvider.availability[day] ?? false,
-                          onChanged: (value) {
-                            setState(() {
-                              currentProvider.availability[day] = value;
-                            });
-                            _updateAvailability();
-                          },
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                ),
+                Text('Location: ${currentProvider.location}'),
+                const SizedBox(height: 8),
+                Text('Service Type: ${currentProvider.serviceType}'),
                 const SizedBox(height: 16),
-                ListTile(
-                  title: const Text('Privacy Settings'),
-                  onTap: () {},
+                ElevatedButton(
+                  onPressed: _updateServiceProvider,
+                  child: _isLoading ? const CircularProgressIndicator() : const Text('Update Details'),
                 ),
-                const SizedBox(height: 16),
-                _isLoading
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: _updateServiceProvider,
-                        child: const Text('Save Changes'),
-                      ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: _logout,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   child: const Text('Logout'),
                 ),
               ],

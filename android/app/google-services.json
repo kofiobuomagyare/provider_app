@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "890466489953",
+    "project_id": "nsaano-f7831",
+    "storage_bucket": "nsaano-f7831.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:890466489953:android:7894107e8b588871b1bc20",
+        "android_client_info": {
+          "package_name": "com.example.app_develop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh5FpKaGssRYlewtcqnSrmcOFPBi5ZEBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:890466489953:android:57f1f544d02aeed0b1bc20",
+        "android_client_info": {
+          "package_name": "com.example.provider_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh5FpKaGssRYlewtcqnSrmcOFPBi5ZEBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:890466489953:android:8b2ea0bab98b1996b1bc20",
+        "android_client_info": {
+          "package_name": "com.nsaano"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh5FpKaGssRYlewtcqnSrmcOFPBi5ZEBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
