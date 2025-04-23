@@ -47,3 +47,5 @@ app.*.map.json
 android/gradle.properties
 # Local properties file
 android/local.properties
+#Firebase auth
+android/app/google-services.json
