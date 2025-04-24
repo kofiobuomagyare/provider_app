@@ -70,4 +70,6 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     await saveLoginState(false);  // Save logout state
   }
+
+  
 }
