@@ -103,7 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isEditing = false;
   Uint8List? _profileImageBytes;
 
-  int _selectedIndex = 2; // Default to 'Settings' tab
+  int _selectedIndex = 3; // Default to 'Settings' tab
 
   ServiceProvider? currentProvider;
   String? _errorMessage;
@@ -382,11 +382,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _selectedIndex = index;
     });
 
-    if (index == 0) {
-      Navigator.pushNamed(context, '/home');
-    } else if (index == 1) {
-      Navigator.pushNamed(context, '/appointments');
-    }
+   if (index == 0) {
+    Navigator.pushNamed(context, '/home');
+  } else if (index == 1) {
+    Navigator.pushNamed(context, '/gallery');
+  } else if (index == 2) {
+    Navigator.pushNamed(context, '/appointments');
+  } else if (index == 3) {
+    Navigator.pushNamed(context, '/settings');
+  }
   }
 
   Widget _buildInfoField(

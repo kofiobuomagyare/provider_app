@@ -45,7 +45,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   Map<String, User> users = {};
   bool isLoading = true;
   String? providerId;
-  int _selectedIndex = 1; // Default to 'Appointments' tab
+  int _selectedIndex = 2; // Default to 'Appointments' tab
   
   // Filter options
   String _filterStatus = "All";
@@ -172,13 +172,15 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       _selectedIndex = index;
     });
 
-    if (index == 0) {
-      Navigator.pushNamed(context, '/home');
-    } else if (index == 1) {
-      // Already on appointments
-    } else if (index == 2) {
-      Navigator.pushNamed(context, '/settings');
-    }
+   if (index == 0) {
+    Navigator.pushNamed(context, '/home');
+  } else if (index == 1) {
+    Navigator.pushNamed(context, '/gallery');
+  } else if (index == 2) {
+    Navigator.pushNamed(context, '/appointments');
+  } else if (index == 3) {
+    Navigator.pushNamed(context, '/settings');
+  }
   }
   
   List<Appointment> getFilteredAppointments() {

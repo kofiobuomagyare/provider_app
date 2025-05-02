@@ -1,4 +1,3 @@
-// lib/widgets/bottomnavbar.dart
 import 'package:flutter/material.dart';
 
 class BottomNavbar extends StatelessWidget {
@@ -21,6 +20,10 @@ class BottomNavbar extends StatelessWidget {
           label: 'Home',
         ),
         BottomNavigationBarItem(
+          icon: Icon(Icons.photo_library),
+          label: 'Gallery',
+        ),
+        BottomNavigationBarItem(
           icon: Icon(Icons.calendar_today),
           label: 'Appointments',
         ),
@@ -29,6 +32,7 @@ class BottomNavbar extends StatelessWidget {
           label: 'Settings',
         ),
       ],
+      type: BottomNavigationBarType.fixed, // Needed for more than 3 items
       onTap: (index) => onItemTapped(index),
     );
   }

@@ -218,19 +218,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+ void _onItemTapped(int index) {
+  setState(() {
+    _selectedIndex = index;
+  });
 
-    if (index == 0) {
-      Navigator.pushNamed(context, '/home');
-    } else if (index == 1) {
-      Navigator.pushNamed(context, '/appointments');
-    } else if (index == 2) {
-      Navigator.pushNamed(context, '/settings');
-    }
+  if (index == 0) {
+    Navigator.pushNamed(context, '/home');
+  } else if (index == 1) {
+    Navigator.pushNamed(context, '/gallery');
+  } else if (index == 2) {
+    Navigator.pushNamed(context, '/appointments');
+  } else if (index == 3) {
+    Navigator.pushNamed(context, '/settings');
   }
+}
 
   String _getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -292,6 +294,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
+        automaticallyImplyLeading: false,
         title: Text(
           "Nsaano Provider",
           style: TextStyle(

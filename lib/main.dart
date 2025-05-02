@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:provider_app/providers/auth_provider.dart';
 import 'package:provider_app/screens/appointment.dart';
+import 'package:provider_app/screens/business_image_screen.dart';
 import 'package:provider_app/screens/home_screen.dart';
 import 'package:provider_app/screens/settings.dart';
 import 'screens/splash_screen.dart';
@@ -47,6 +48,7 @@ class NsaanoBusinessApp extends StatelessWidget {
                   '/create-account': (context) => const CreateAccountPage(),
                   '/login': (context) => const LoginScreen(),
                   '/home': (context) => const HomeScreen(),
+                  '/gallery': (context) => const BusinessImagesScreen(),
                   '/appointments': (context) => const AppointmentScreen(),
                   '/settings': (context) => const SettingsScreen(),
                 },
@@ -59,7 +61,7 @@ class NsaanoBusinessApp extends StatelessWidget {
                   }
 
                   // Protect routes that require authentication
-                  if (['/home', '/appointments', '/settings'].contains(settings.name)) {
+                  if (['/home', '/gallery', '/appointments', '/settings'].contains(settings.name)) {
                     if (!authProvider.isLoggedIn) {
                       return MaterialPageRoute(
                         builder: (context) => const LoginScreen(),
