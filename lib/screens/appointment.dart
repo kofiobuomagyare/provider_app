@@ -6,6 +6,31 @@ import 'package:provider_app/Models/appointment.dart';
 import 'package:provider_app/bottomnavbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+class User {
+  final String userId;
+  final String firstName;
+  final String lastName;
+  final String? profilePicture;
+
+  User({
+    required this.userId,
+    required this.firstName,
+    required this.lastName,
+    this.profilePicture,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      userId: json['userId'] ?? '',
+      firstName: json['first_name'] ?? '',
+      lastName: json['last_name'] ?? '',
+      profilePicture: json['profile_picture'],
+    );
+  }
+
+  String get fullName => '$firstName $lastName';
+}
+
 class AppointmentScreen extends StatefulWidget {
   final Appointment? appointment;
   
@@ -17,6 +42,7 @@ class AppointmentScreen extends StatefulWidget {
 
 class _AppointmentScreenState extends State<AppointmentScreen> {
   List<Appointment> appointments = [];
+  Map<String, User> users = {};
   bool isLoading = true;
   String? providerId;
   int _selectedIndex = 1; // Default to 'Appointments' tab
@@ -82,14 +108,63 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         appointments = jsonData.map((e) => Appointment.fromJson(e)).toList();
         // Sort appointments by date (newest first)
         appointments.sort((a, b) => b.appointmentDate.compareTo(a.appointmentDate));
-        isLoading = false;
       });
+      
+      // Fetch user details for each appointment
+      await fetchUsersData();
     } else {
       print("Failed to load appointments: ${response.statusCode}");
       setState(() {
         isLoading = false;
       });
     }
+  }
+  
+  Future<void> fetchUsersData() async {
+    // Get unique user IDs from appointments
+    final Set<String> uniqueUserIds = appointments.map((a) => a.userId).toSet();
+    
+    // Create a map to store fetched users
+    Map<String, User> fetchedUsers = {};
+    
+    // Fetch user data for each unique user ID
+    for (String userId in uniqueUserIds) {
+      try {
+        final userUrl = Uri.parse(
+          "https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/users/findByUserId/$userId"
+        );
+        
+        final userResponse = await http.get(userUrl);
+        
+        if (userResponse.statusCode == 200) {
+          final userData = jsonDecode(userResponse.body);
+          fetchedUsers[userId] = User.fromJson(userData);
+        } else {
+          print("Failed to fetch user data for $userId: ${userResponse.statusCode}");
+          // Create a placeholder user with just the ID
+          fetchedUsers[userId] = User(
+            userId: userId,
+            firstName: 'User',
+            lastName: userId.substring(0, 3),
+            profilePicture: null,
+          );
+        }
+      } catch (e) {
+        print("Error fetching user data: $e");
+        // Create a placeholder user for error cases
+        fetchedUsers[userId] = User(
+          userId: userId,
+          firstName: 'User',
+          lastName: userId.substring(0, 3),
+          profilePicture: null,
+        );
+      }
+    }
+    
+    setState(() {
+      users = fetchedUsers;
+      isLoading = false;
+    });
   }
 
   void _onItemTapped(int index) {
@@ -127,49 +202,51 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   }
   
   Future<void> _updateAppointmentStatus(Appointment appointment, String newStatus) async {
-  setState(() {
-    isLoading = true;
-  });
-  
-  final url = Uri.parse(
-      "https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/appointments/${appointment.serviceProviderId}/appointments/${appointment.userId}/status");
-  
-  final updatedAppointment = {
-    'status': newStatus,
-  };
-  
-  try {
-    final response = await http.put(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(updatedAppointment),
-    );
+    setState(() {
+      isLoading = true;
+    });
     
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Appointment status updated to $newStatus'))
+    final url = Uri.parse(
+        "https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/appointments/${appointment.serviceProviderId}/appointments/${appointment.userId}/status");
+    
+    final updatedAppointment = {
+      'status': newStatus,
+    };
+    
+    try {
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(updatedAppointment),
       );
-      fetchAppointments();
-    } else {
+      
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Appointment status updated to $newStatus'))
+        );
+        fetchAppointments();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update appointment status: ${response.body}'))
+        );
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error updating appointment: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update appointment status: ${response.body}'))
+        const SnackBar(content: Text('An error occurred while updating appointment'))
       );
       setState(() {
         isLoading = false;
       });
     }
-  } catch (e) {
-    print('Error updating appointment: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('An error occurred while updating appointment'))
-    );
-    setState(() {
-      isLoading = false;
-    });
   }
-}
   
   void _showAppointmentOptions(Appointment appointment) {
+    final user = users[appointment.userId];
+    
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -192,7 +269,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
               const SizedBox(height: 20),
               _buildDetailsRow("Date", DateFormat('MMMM d, yyyy').format(appointment.appointmentDate.toLocal())),
               _buildDetailsRow("Time", DateFormat('h:mm a').format(appointment.appointmentDate.toLocal())),
-              _buildDetailsRow("User ID", appointment.userId),
+              _buildDetailsRow("Client", user?.fullName ?? "Unknown User"),
               _buildDetailsRow("Status", appointment.status),
               const SizedBox(height: 24),
               Text(
@@ -433,6 +510,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                               final appt = filteredAppointments[index];
                               final formattedDate = DateFormat('MMM d, yyyy • h:mm a')
                                   .format(appt.appointmentDate.toLocal());
+                              final user = users[appt.userId];
                               
                               // Group appointments by date
                               final bool isFirstOfDay = index == 0 ||
@@ -473,22 +551,28 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                                         horizontal: 16,
                                         vertical: 12,
                                       ),
-                                      leading: CircleAvatar(
-                                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                                        child: Text(
-                                          appt.userId.substring(0, 1).toUpperCase(),
-                                          style: TextStyle(
-                                            color: Theme.of(context).primaryColor,
-                                            fontWeight: FontWeight.bold,
+                                      leading: user?.profilePicture != null
+                                        ? CircleAvatar(
+                                            backgroundImage: NetworkImage(user!.profilePicture!),
+                                            backgroundColor: Colors.grey[200],
+                                          )
+                                        : CircleAvatar(
+                                            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                                            child: Text(
+                                              user?.firstName.substring(0, 1).toUpperCase() ?? 
+                                              appt.userId.substring(0, 1).toUpperCase(),
+                                              style: TextStyle(
+                                                color: Theme.of(context).primaryColor,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
                                       title: Row(
                                         children: [
                                           Flexible(
                                             flex: 3,
                                             child: Text(
-                                              'User ID: ${appt.userId}',
+                                              user?.fullName ?? 'User ID: ${appt.userId}',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.w600,
                                                 fontSize: 16,

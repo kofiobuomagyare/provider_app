@@ -1,8 +1,5 @@
-// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import the shared_preferences package
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,38 +13,47 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _isPasswordVisible = false;  // Variable to track password visibility
+  bool _isPasswordVisible = false;
 
-Future<void> _login() async {
-  setState(() {
-    _isLoading = true;
-  });
-
-  final bool success = await Provider.of<AuthProvider>(context, listen: false)
-      .login(_phoneController.text, _passwordController.text);
-
-  setState(() {
-    _isLoading = false;
-  });
-
-  if (success) {
-    // Store the phone number in SharedPreferences after successful login
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('phoneNumber', _phoneController.text);
-    
-    // Log to ensure the phone number is saved
-    String? storedPhoneNumber = prefs.getString('phoneNumber');
-    print('Stored phone number: $storedPhoneNumber');
-
-    // Navigate to home screen if login is successful
-    Navigator.pushReplacementNamed(context, '/home');
-  } else {
-    // Show error message if login fails
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(Provider.of<AuthProvider>(context, listen: false).errorMessage)),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedPhoneNumber();
   }
-}
+
+  Future<void> _loadSavedPhoneNumber() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.phoneNumber.isNotEmpty) {
+      _phoneController.text = authProvider.phoneNumber;
+    }
+  }
+
+  Future<void> _login() async {
+    if (_phoneController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter phone number and password')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.login(
+      _phoneController.text,
+      _passwordController.text,
+    );
+
+    setState(() => _isLoading = false);
+
+    if (success && mounted) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(authProvider.errorMessage)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,25 +69,24 @@ Future<void> _login() async {
               decoration: const InputDecoration(
                 labelText: 'Phone Number',
                 border: OutlineInputBorder(),
+                prefixText: '+233 ',
               ),
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
-              obscureText: !_isPasswordVisible,  // Toggle the visibility based on _isPasswordVisible
+              obscureText: !_isPasswordVisible,
               decoration: InputDecoration(
                 labelText: 'Password',
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    _isPasswordVisible 
+                      ? Icons.visibility 
+                      : Icons.visibility_off,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;  // Toggle the visibility
-                    });
-                  },
+                  onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                 ),
               ),
             ),
@@ -90,6 +95,9 @@ Future<void> _login() async {
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
                     onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
                     child: const Text('Login'),
                   ),
           ],

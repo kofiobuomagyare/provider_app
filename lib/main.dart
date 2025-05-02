@@ -7,9 +7,10 @@ import 'package:provider_app/screens/home_screen.dart';
 import 'package:provider_app/screens/settings.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/create_account.dart';  // Create Account Screen
+import 'screens/create_account.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const NsaanoBusinessApp());
 }
 
@@ -25,20 +26,20 @@ class NsaanoBusinessApp extends StatelessWidget {
       builder: (context, child) {
         return MultiProvider(
           providers: [
-            ChangeNotifierProvider(create: (_) => AuthProvider()),
+            ChangeNotifierProvider(
+              create: (_) => AuthProvider()..loadLoginState(),
+              lazy: false,
+            ),
           ],
           child: Consumer<AuthProvider>(
             builder: (context, authProvider, child) {
-              // Load login state when the app starts
-              authProvider.loadLoginState();
-
               return MaterialApp(
                 debugShowCheckedModeBanner: false,
                 title: 'Nsaano Business',
                 theme: ThemeData(
                   primarySwatch: Colors.blue,
                   useMaterial3: true,
-                  brightness: Brightness.dark,  // Dark Mode Theme
+                  brightness: Brightness.light,
                 ),
                 initialRoute: '/splash',
                 routes: {
@@ -48,6 +49,25 @@ class NsaanoBusinessApp extends StatelessWidget {
                   '/home': (context) => const HomeScreen(),
                   '/appointments': (context) => const AppointmentScreen(),
                   '/settings': (context) => const SettingsScreen(),
+                },
+                onGenerateRoute: (settings) {
+                  // No need to use Provider.of here since we're in the builder
+                  if (settings.name == '/splash') {
+                    return MaterialPageRoute(
+                      builder: (context) => const SplashScreen(),
+                    );
+                  }
+
+                  // Protect routes that require authentication
+                  if (['/home', '/appointments', '/settings'].contains(settings.name)) {
+                    if (!authProvider.isLoggedIn) {
+                      return MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      );
+                    }
+                  }
+
+                  return null;
                 },
               );
             },
