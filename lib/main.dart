@@ -9,6 +9,7 @@ import 'package:provider_app/screens/settings.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/create_account.dart';
+import 'screens/reset_password_screen.dart'; // Import the reset password screen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +48,7 @@ class NsaanoBusinessApp extends StatelessWidget {
                   '/splash': (context) => const SplashScreen(),
                   '/create-account': (context) => const CreateAccountPage(),
                   '/login': (context) => const LoginScreen(),
+                  '/reset-password': (context) => const ResetPasswordScreen(), // Add reset password route
                   '/home': (context) => const HomeScreen(),
                   '/gallery': (context) => const BusinessImagesScreen(),
                   '/appointments': (context) => const AppointmentScreen(),
@@ -59,7 +61,7 @@ class NsaanoBusinessApp extends StatelessWidget {
                       builder: (context) => const SplashScreen(),
                     );
                   }
-
+                  
                   // Protect routes that require authentication
                   if (['/home', '/gallery', '/appointments', '/settings'].contains(settings.name)) {
                     if (!authProvider.isLoggedIn) {
@@ -68,7 +70,7 @@ class NsaanoBusinessApp extends StatelessWidget {
                       );
                     }
                   }
-
+                  
                   return null;
                 },
               );

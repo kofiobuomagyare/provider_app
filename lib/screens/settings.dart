@@ -110,12 +110,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? providerId;
 
   // Helper function to extract numeric ID from custom ID format
-  int _extractNumericId(String customId) {
-    // Extract numeric part from "nsaserv003" → 3
-    final numericPart = customId.replaceAll(RegExp(r'[^0-9]'), '');
-    return int.tryParse(numericPart) ?? 0; // Return 0 or handle error as needed
+ int _extractNumericId(String customId) {
+  final numericPart = customId.replaceAll(RegExp(r'[^0-9]'), '');
+  final id = int.tryParse(numericPart) ?? 0; 
+  
+  // Add debugging to see what's being extracted
+  print('Original ID: $customId, Extracted numeric part: $numericPart, Parsed ID: $id');
+  
+  // If ID is 0, there might be an issue with extraction
+  if (id == 0 && numericPart.isEmpty) {
+    // Use the full ID if we couldn't extract a numeric part
+    return 0; // You might want to handle this differently
   }
-
+  
+  return id;
+}
   @override
   void initState() {
     super.initState();

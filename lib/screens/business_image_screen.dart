@@ -572,8 +572,8 @@ class _BusinessImagesScreenState extends State<BusinessImagesScreen> {
       floatingActionButton: (!isLoading && _errorMessage == null) 
         ? FloatingActionButton(
             onPressed: _pickImage,
-            child: const Icon(Icons.add_photo_alternate),
             tooltip: 'Add Image',
+            child: const Icon(Icons.add_photo_alternate),
           )
         : null,
          bottomNavigationBar: BottomNavbar(

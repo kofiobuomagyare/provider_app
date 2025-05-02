@@ -39,6 +39,7 @@ dependencies:
   geolocator_android: ^5.0.1
   logger: ^2.5.0
   intl: ^0.20.2
+  connectivity_plus: ^6.1.4
   
   
 
