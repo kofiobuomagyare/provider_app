@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../Models/appointment.dart';
+import '../models/appointment.dart';
 
 class AppointmentService {
   static const String baseUrl = 'https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/appointments';

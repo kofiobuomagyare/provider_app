@@ -3,7 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:provider_app/Models/appointment.dart';
+import 'package:provider_app/models/appointment.dart';
 import 'package:provider_app/bottomnavbar.dart';
 import 'package:provider_app/screens/appointment.dart';
 import 'package:shared_preferences/shared_preferences.dart';
