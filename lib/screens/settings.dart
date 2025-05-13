@@ -149,6 +149,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _isLoading = false;
       });
     }
+    if (_errorMessage == 'Phone number not found. Please log in again.') {
+  Future.delayed(Duration.zero, () {
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+  });
+}
+
   }
 
   Future<void> fetchProviderIdByPhone(String phone) async {
@@ -349,36 +355,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _logout() async {
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? authToken = prefs.getString('authToken');
+  try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? authToken = prefs.getString('authToken');
 
-      await prefs.remove('serviceProviderId');
-      await prefs.remove('authToken');
-      await prefs.remove('phoneNumber');
+    await prefs.clear(); // Clear all saved data
 
-      final url = Uri.parse(
-        'https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/providers/logout',
-      );
-      final response = await http.post(
-        url,
-        headers: {'Authorization': 'Bearer $authToken'},
-      );
+    final url = Uri.parse(
+      'https://salty-citadel-42862-262ec2972a46.herokuapp.com/api/providers/logout',
+    );
+    final response = await http.post(
+  url,
+  headers: {'Authorization': 'Bearer $authToken'},
+);
 
-      if (response.statusCode == 200) {
-        Navigator.pushReplacementNamed(context, '/login');
-      } else {
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    } catch (e) {
-      print('Error during logout: $e');
-      Navigator.pushReplacementNamed(context, '/login');
-    }
+if (response.statusCode == 200) {
+  print("Logout successful");
+} else {
+  print("Logout failed: ${response.statusCode}");
+}
+
+    // Always navigate to splash/login and remove all previous routes
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      '/splash', // or '/login' if you prefer
+      (Route<dynamic> route) => false,
+    );
+  } catch (e) {
+    print('Error during logout: $e');
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      '/login',
+      (Route<dynamic> route) => false,
+    );
   }
+}
+
 
   void _toggleEditMode() {
     setState(() {

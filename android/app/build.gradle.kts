@@ -29,8 +29,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled=true
         // Use MAPS_API_KEY from gradle.properties
         manifestPlaceholders["MAPS_API_KEY"] = project.findProperty("MAPS_API_KEY") ?: ""
+        
     }
 
     ndkVersion = "27.0.12077973"

@@ -88,23 +88,34 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   }
 
   // Function to pick an image from the gallery
-  Future<void> _pickImage() async {
-    // Request permission for photos/gallery if not granted
-    final status = await Permission.photos.request();
-    if (status.isGranted) {
-      final pickedFile =
-          await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        setState(() {
-          _profileImage = File(pickedFile.path);
-        });
-      }
+ Future<void> _pickImage() async {
+  PermissionStatus status;
+
+  if (Platform.isAndroid) {
+    if (Platform.version.contains("13") || Platform.version.contains("14")) {
+      // Android 13+ uses READ_MEDIA_IMAGES
+      status = await Permission.photos.request();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gallery permission denied')),
-      );
+      // Android 12 and below use READ_EXTERNAL_STORAGE
+      status = await Permission.storage.request();
     }
+  } else {
+    status = await Permission.photos.request(); // For iOS
   }
+
+  if (status.isGranted) {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Permission denied')),
+    );
+  }
+}
 
   // Function to pick location (here we simulate by getting current location)
   Future<void> _pickLocation() async {
