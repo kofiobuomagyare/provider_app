@@ -43,11 +43,11 @@ Maintain a profile
 🧾 RESTful APIs – Communication between frontend and backend
 
 ## 📸 Screenshots
-
+ ### Splash Screen
 ![Splash Screen](https://github.com/user-attachments/assets/6d974630-e8e3-4430-938d-f8ddd9f711ec)  
-
+### Home Screen
 ![Home Screen](https://github.com/user-attachments/assets/040ebd8a-4024-4cda-8371-ab59597dcbcd)
-
+### Appointment View
 ![Appointment View](https://github.com/user-attachments/assets/d667e825-65d2-43d7-8c8f-569a794fa11f)
 
 
